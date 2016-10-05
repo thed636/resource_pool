@@ -66,6 +66,7 @@ TEST(handle_test, construct_usable_than_get_should_return_value) {
     auto pool_impl = std::make_shared<pool::pool_impl>();
     resource_handle handle(pool_impl, &resource_handle::waste, resources.begin());
     EXPECT_EQ(&handle.get(), res.get());
+    EXPECT_CALL(*pool_impl, waste(_)).WillOnce(Return());
 }
 
 TEST(handle_test, construct_usable_than_get_const_should_return_value) {
@@ -74,6 +75,34 @@ TEST(handle_test, construct_usable_than_get_const_should_return_value) {
     auto pool_impl = std::make_shared<pool::pool_impl>();
     const resource_handle handle(pool_impl, &resource_handle::waste, resources.begin());
     EXPECT_EQ(&handle.get(), res.get());
+    EXPECT_CALL(*pool_impl, waste(_)).WillOnce(Return());
+}
+
+TEST(handle_test, call_get_after_pool_impl_dtor_should_throw_exception) {
+    std::list<idle> resources({idle {std::make_shared<resource>()}});
+    auto pool_impl = std::make_shared<pool::pool_impl>();
+    resource_handle handle(pool_impl, &resource_handle::waste, resources.begin());
+    pool_impl.reset();
+    resources.clear();
+    EXPECT_THROW(handle.get(), yamail::resource_pool::error::unusable_handle);
+}
+
+TEST(handle_test, call_get_const_after_pool_impl_dtor_should_throw_exception) {
+    std::list<idle> resources({idle {std::make_shared<resource>()}});
+    auto pool_impl = std::make_shared<pool::pool_impl>();
+    const resource_handle handle(pool_impl, &resource_handle::waste, resources.begin());
+    pool_impl.reset();
+    resources.clear();
+    EXPECT_THROW(handle.get(), yamail::resource_pool::error::unusable_handle);
+}
+
+TEST(handle_test, call_reset_after_pool_impl_dtor_should_throw_exception) {
+    std::list<idle> resources({idle {std::make_shared<resource>()}});
+    auto pool_impl = std::make_shared<pool::pool_impl>();
+    resource_handle handle(pool_impl, &resource_handle::waste, resources.begin());
+    pool_impl.reset();
+    resources.clear();
+    EXPECT_THROW(handle.reset(std::shared_ptr<resource>()), yamail::resource_pool::error::unusable_handle);
 }
 
 }

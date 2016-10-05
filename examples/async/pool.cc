@@ -1,6 +1,7 @@
 #include <yamail/resource_pool/async/pool.hpp>
 
 #include <fstream>
+#include <future>
 #include <thread>
 
 typedef yamail::resource_pool::async::pool<std::ofstream> ofstream_pool;
@@ -32,7 +33,19 @@ int main() {
     boost::asio::io_service::work work(service);
     std::thread worker([&] { return service.run(); });
     ofstream_pool pool(service, 1, 10);
-    pool.get_auto_waste(on_get(), time_traits::duration::max());
+    on_get handler;
+    std::promise<void> promise;
+    auto future = promise.get_future();
+    struct auto_set_value {
+        std::promise<void>& promise;
+        ~auto_set_value() { promise.set_value(); }
+    };
+    const auto sync_wrap = [&] (const boost::system::error_code& ec, ofstream_pool::handle handle) {
+        auto_set_value set_value {promise};
+        handler(ec, std::move(handle));
+    };
+    pool.get_auto_waste(sync_wrap, time_traits::duration::max());
+    future.wait();
     service.stop();
     worker.join();
     return 0;

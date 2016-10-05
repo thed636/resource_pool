@@ -16,7 +16,7 @@ public:
     typedef typename pool_impl::value_type value_type;
     typedef typename pool_impl::pointer pointer;
     typedef void (handle::*strategy)();
-    typedef std::shared_ptr<pool_impl> pool_impl_ptr;
+    typedef std::weak_ptr<pool_impl> pool_impl_ptr;
     typedef typename pool_impl::list_iterator list_iterator;
 
     friend pool;
@@ -84,34 +84,50 @@ handle<P>& handle<P>::operator =(handle&& other) {
 
 template <class P>
 typename handle<P>::value_type& handle<P>::get() {
-    assert_not_empty();
-    return *_resource_it->value;
+    if (const auto locked = _pool_impl.lock()) {
+        assert_not_empty();
+        return *_resource_it->value;
+    } else {
+        throw error::unusable_handle();
+    }
 }
 
 template <class P>
 const typename handle<P>::value_type& handle<P>::get() const {
-    assert_not_empty();
-    return *_resource_it->value;
+    if (const auto locked = _pool_impl.lock()) {
+        assert_not_empty();
+        return *_resource_it->value;
+    } else {
+        throw error::unusable_handle();
+    }
 }
 
 template <class P>
 void handle<P>::recycle() {
     assert_not_unusable();
-    _pool_impl->recycle(_resource_it);
+    if (const auto locked = _pool_impl.lock()) {
+        locked->recycle(_resource_it);
+    }
     _resource_it = list_iterator();
 }
 
 template <class P>
 void handle<P>::waste() {
     assert_not_unusable();
-    _pool_impl->waste(_resource_it);
+    if (const auto locked = _pool_impl.lock()) {
+        locked->waste(_resource_it);
+    }
     _resource_it = list_iterator();
 }
 
 template <class P>
 void handle<P>::reset(const pointer &res) {
     assert_not_unusable();
-    _resource_it->value = res;
+    if (const auto locked = _pool_impl.lock()) {
+        _resource_it->value = res;
+    } else {
+        throw error::unusable_handle();
+    }
 }
 
 template <class P>

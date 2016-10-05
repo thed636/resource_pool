@@ -86,11 +86,12 @@ private:
 
     template <class Callback>
     void get(Callback&& call, strategy use_strategy, time_traits::duration wait_duration) {
-        const auto on_get = [impl = _impl, use_strategy, call = std::forward<Callback>(call)] (const auto& ec, auto res) mutable {
+        const std::weak_ptr<pool_impl> weak_impl = _impl;
+        const auto on_get = [weak_impl, use_strategy, call = std::forward<Callback>(call)] (const auto& ec, auto res) {
             if (ec) {
                 call(ec, handle());
             } else {
-                call(ec, handle(impl, use_strategy, res));
+                call(ec, handle(weak_impl, use_strategy, res));
             }
         };
         _impl->get(on_get, wait_duration);
