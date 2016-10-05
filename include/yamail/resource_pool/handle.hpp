@@ -21,6 +21,7 @@ public:
 
     friend pool;
 
+    handle() = default;
     handle(const handle& other) = delete;
     handle(handle&& other);
 
