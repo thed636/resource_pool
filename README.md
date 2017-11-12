@@ -164,7 +164,6 @@ typedef pool<std::fstream> fstream_pool;
 Object constructing requires reference to io service, capacity of pool, queue capacity:
 ```c++
 pool(
-    io_service_t& io_service,
     std::size_t capacity,
     std::size_t queue_capacity,
     time_traits::duration idle_timeout = time_traits::duration::max()
@@ -173,8 +172,7 @@ pool(
 
 Example:
 ```c++
-boost::asio::io_service ios;
-fstream_pool pool(ios, 13, 42);
+fstream_pool pool(13, 42);
 ```
 
 #### Get handle
@@ -183,6 +181,7 @@ Use one of these methods:
 ```c++
 template <class Callback>
 void get_auto_waste(
+    io_service_t& io_service,
     Callback call,
     const time_traits::duration& wait_duration = time_traits::duration(0)
 );
@@ -192,6 +191,7 @@ returns resource handle when it will be available with auto waste strategy.
 ```c++
 template <class Callback>
 void get_auto_recycle(
+    io_service_t& io_service,
     Callback call,
     const time_traits::duration& wait_duration = time_traits::duration(0)
 );
@@ -242,13 +242,15 @@ struct handle_get {
     }
 };
 
-pool.get(handle_get(), time_traits::duration(1));
+boost::asio::io_service io;
+pool.get(io, handle_get(), time_traits::duration(1));
 ```
 
 Example with Boost.Coroutines:
 ```c++
+boost::asio::io_service io;
 boost::asio::spawn(io, [&](boost::asio::yield_context yield) {
-    auto h = pool.get(yield, time_traits::duration(1));
+    auto h = pool.get(io, yield, time_traits::duration(1));
     if (h.empty()) {
         h.reset(create_resource(yield));
     }
