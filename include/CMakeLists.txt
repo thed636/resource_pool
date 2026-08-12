@@ -1,4 +1,4 @@
-find_package(Boost 1.69 REQUIRED COMPONENTS thread)
+find_package(Boost 1.86 REQUIRED COMPONENTS thread)
 
 add_library(resource_pool INTERFACE)
 target_compile_features(resource_pool INTERFACE cxx_std_17)

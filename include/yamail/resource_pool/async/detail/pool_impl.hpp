@@ -410,22 +410,7 @@ struct handler_type {
     using type = typename boost::asio::async_result<CompletionToken, Signature>::completion_handler_type;
 };
 
-#if BOOST_VERSION < 106600
-template <typename CompletionToken, typename Signature>
-struct async_completion {
-    explicit async_completion(CompletionToken& token)
-    : completion_handler(std::move(token)),
-      result(completion_handler) {
-    }
-
-    using completion_handler_type = typename handler_type<CompletionToken, Signature>::type;
-
-    completion_handler_type completion_handler;
-    async_result<completion_handler_type> result;
-};
-#else
 using boost::asio::async_completion;
-#endif
 
 template <typename Handler, typename Signature>
 using async_return_type = typename ::boost::asio::async_result<Handler, Signature>::return_type;
