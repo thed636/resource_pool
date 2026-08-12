@@ -95,7 +95,7 @@ private:
 template <class T>
 class list_iterator_handler {
 public:
-    using executor_type = asio::executor;
+    using executor_type = asio::any_io_executor;
 
     list_iterator_handler() = default;
 
@@ -123,7 +123,7 @@ public:
     }
 
 private:
-    asio::executor executor;
+    asio::any_io_executor executor;
     std::unique_ptr<base_list_iterator_handler_impl<T>> impl;
 };
 

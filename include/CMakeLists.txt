@@ -1,4 +1,4 @@
-find_package(Boost 1.66 REQUIRED COMPONENTS system thread REQUIRED)
+find_package(Boost 1.69 REQUIRED COMPONENTS thread)
 
 add_library(resource_pool INTERFACE)
 target_compile_features(resource_pool INTERFACE cxx_std_17)
@@ -6,11 +6,10 @@ target_include_directories(resource_pool
         INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<INSTALL_INTERFACE:include>)
-target_link_libraries(resource_pool INTERFACE Boost::system Boost::thread Boost::boost)
+target_link_libraries(resource_pool INTERFACE Boost::thread Boost::boost)
 target_compile_definitions(resource_pool
         INTERFACE
         -DBOOST_COROUTINES_NO_DEPRECATION_WARNING
-        -DBOOST_ASIO_USE_TS_EXECUTOR_AS_DEFAULT
         )
 add_library(elsid::resource_pool ALIAS resource_pool)
 
